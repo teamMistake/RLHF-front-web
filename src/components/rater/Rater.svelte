@@ -6,8 +6,6 @@
 	const dispatch = createEventDispatcher();
 
     export let query;
-    let sorted;
-    $: sorted = query.answers;
     // let prompt;
     // $: prompt = query.prompt;
 
@@ -16,8 +14,13 @@
 
     // query is the data containing what to evaluate
 
+    let sorted = [];
+
     const submit = () => {
         dispatch('submit', {query: query, rated: sorted});
+    }
+    const reset = () => {
+        sorted= [];
     }
 </script>
 
@@ -27,11 +30,17 @@ Order from best at top to worst at bottom
     <CorpusBox content={query.prompt.content} label="Question"/>
 </div>
 <div class="content">
-    <SortableList list={sorted} on:sort={(ev) => {sorted = ev.detail;}} let:item key="answerId">
-        <CorpusBox content={item.content} label={`Answer #${item.answerId}`}/>
-    </SortableList>
+    {#each query.answers as answer}
+        {@const th = sorted.indexOf(answer.answerId)}
+        <CorpusBox content={answer.content} label={`Answer #${answer.answerId}`} badge={th == -1 ? undefined : th+1}
+        on:click={() => {
+            console.log("a");
+            if (th == -1) sorted = [...sorted, answer.answerId];
+        }}/>
+    {/each}
 </div>
 <div class="submit">
+    <button on:click={reset}>Reset</button>
     <button on:click={submit}>Submit</button>
 </div>
 
