@@ -1,7 +1,8 @@
 <script>
     import Loading from "../../components/loading/Loading.svelte";
+    import {API_TOKEN, API_URL} from "../../api";
 
-    let username, password, confirm, file;
+    let username='', password='', confirm='', file=undefined, nickname='';
 
     let passwordChk;
     $: {
@@ -26,10 +27,52 @@
     let loading = false;
 
     const signup = async () => {
+        if (!passwordChk) return;
+        username = username.trim();
+        nickname = nickname.trim();
+        if (username === '') {
+            warning = "Username is Empty";
+            return;
+        }
+        if (password === '') {
+            warning = "Password is Empty";
+            return;
+        }
+        if (nickname === '') {
+            warning = "Nickname is Empty";
+            return;
+        }
+        console.log(file);
+        if (file == undefined || file.length != 1) {
+            warning = "Plase upload file";
+            return;
+        }
+
         loading = true;
-        await timeout(2000);
+        try {
+            let formdata = new FormData();
+            formdata.append("request", new Blob([JSON.stringify({
+                    username: username,
+                    password: password,
+                    nickname: nickname
+                })], {
+                type: "application/json"
+            }));
+            formdata.append("idcard", file[0]);
+
+            let res = await fetch(`${API_URL}/users/signup`, {
+                method: "POST",
+                body: formdata
+            });
+            if (res.status != 200) throw new Error(`HTTP ${res.status} : ${await res.text()}`);
+            let body = await res.text();
+            console.log(body);
+            $API_TOKEN = body;
+            location.href = "/";
+        } catch (e) {
+            warning = e.toString();
+        }
         loading = false;
-        warning = "Username Taken";
     }
 </script>
 <Loading show={loading}/>
@@ -42,8 +85,9 @@
         {#if !passwordChk}
             <span class="warning">Password Does not Match</span>
         {/if}
+        <input type="text" placeholder="nickname" bind:value={nickname}/>
         Student ID Pic
-        <input type="file" placeholder="Student ID picture" bind:value={file}/>
+        <input type="file" placeholder="Student ID picture" bind:files={file} accept="image/png, image/jpeg"/>
         <button on:click={signup}>Sign Up</button>
         {#if warning !== ''}
             <span class="warning">{warning}</span>

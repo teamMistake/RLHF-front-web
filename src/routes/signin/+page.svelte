@@ -1,4 +1,5 @@
 <script>
+    import { API_TOKEN, API_URL } from "../../api";
     import Loading from "../../components/loading/Loading.svelte";
 
 
@@ -24,7 +25,24 @@
 
     const signin = async () => {
         loading = true;
-        await timeout(2000);
+        try {
+            let formdata = new FormData();
+            let res = await fetch(`${API_URL}/signin`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            if (res.status != 200) throw new Error(`HTTP ${res.status} : ${await res.text()}`);
+            $API_TOKEN = `Bearer ${await res.text()}`;
+            location.href = "/";
+        } catch (e) {
+            warning = e.toString();
+        }
         loading = false;
     }
 </script>

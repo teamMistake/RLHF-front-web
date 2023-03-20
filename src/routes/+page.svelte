@@ -1,6 +1,6 @@
 <script>
     import Rater from "../components/rater/Rater.svelte";
-    import CorpusBox from "../components/textbox/CorpusBox.svelte";
+    import UserInfo from "../components/userinfo/UserInfo.svelte";
 
     let query = undefined;
 
@@ -69,7 +69,7 @@
 <div class="header">
     <h1>RLHF Reward Model Trainer</h1>
     Below is the model output. Rate the outputs
-    <a href="/signin">Sign in to receive Awesome REWARD</a>
+    <UserInfo/>
 </div>
 
 {#if query === undefined}
