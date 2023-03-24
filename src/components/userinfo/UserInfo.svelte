@@ -8,6 +8,7 @@
 </script>
 {#if $USER_INFO !== undefined}
     <span>Welcome! {$USER_INFO.nickname}</span> <button on:click={signout}>Sign Out</button>
+    <a href="/settings">My Settings</a>
 {:else}
     <a href="/signin">Sign in to receive Awesome REWARD</a>
 {/if}
