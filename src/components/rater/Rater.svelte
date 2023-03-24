@@ -1,11 +1,10 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
     import CorpusBox from '../textbox/CorpusBox.svelte';
-    import SortableList from 'svelte-sortable-list';
 
 	const dispatch = createEventDispatcher();
 
-    export let query;
+    export let task;
     // let prompt;
     // $: prompt = query.prompt;
 
@@ -17,7 +16,7 @@
     let sorted = [];
 
     const submit = () => {
-        dispatch('submit', {query: query, rated: sorted});
+        dispatch('submit', {sorted: sorted});
     }
     const reset = () => {
         sorted= [];
@@ -27,10 +26,10 @@
 Order from best at top to worst at bottom
 
 <div class="question">
-    <CorpusBox content={query.prompt.content} label="Question"/>
+    <CorpusBox content={task.prompt.content} label="Question"/>
 </div>
 <div class="content">
-    {#each query.answers as answer}
+    {#each task.answers as answer}
         {@const th = sorted.indexOf(answer.answerId)}
         <CorpusBox content={answer.content} label={`Answer #${answer.answerId}`} badge={th == -1 ? undefined : th+1}
         on:click={() => {
