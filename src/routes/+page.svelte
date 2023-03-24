@@ -8,70 +8,38 @@
     };
 
     let query = undefined;
-
     let queryQueue = [];
     let querying = false;
-
-    const timeout = (sec) => {
-        let promise;
-        setTimeout(() => {
-            promise();
-        }, sec);
-
-        return new Promise((resolve, reject) => {
-            promise = resolve;
-        })
-    }
+    let err;
 
     const pullQueries = async (limit) => {
         if (querying) return;
         querying = true;
+        err = undefined;
+        try {
             let resp =  await fetch(`${API_URL}/label/tasks?size=${10}`, {
                 method: "GET",
                 headers: {
                     Authorization: $API_TOKEN
                 }
             });
-            return await resp.json()
-    }
-    pullQueries(10).then(res => {
-        querying = false;
-        queryQueue = res;
-        if (queryQueue.length > 0) {
-            query = queryQueue.pop();
-        } else {
-            query = {task: {type: "noQuery"}};
-        }
-    });
+            if (resp.status !== 200) throw new Error(resp.status+" "+resp.statusText+": "+await resp.text());
+            let json = await resp.json();
 
-    const refresh = () => {
-            query = undefined;
-        pullQueries(10).then(res => {
-            querying = false;
-            queryQueue = res;
-            if (queryQueue.length > 0) {
+            queryQueue = [...queryQueue, ...json];
+            if (query === undefined) {
                 query = queryQueue.pop();
-            } else {
-                query = {task: {type: "noQuery"}};
             }
-        });
+        } catch (error) {
+            err = error;
+        }
+        querying = false;
     }
+    pullQueries(10);
 
     const submit = async (query2, res) => {
         if (queryQueue.length < 5 && !querying) {
-            pullQueries(10).then(res => {
-                console.log(queryQueue, res);
-                queryQueue = [...queryQueue, ...res];
-                querying = false;
-
-                if (query === undefined) {
-                    if (queryQueue.length > 0) {
-                        query = queryQueue.pop();
-                    } else {
-                        query = {task: {type: "noQuery"}};
-                    }
-                }
-            });
+            pullQueries(10);
         }
         query = queryQueue.pop();
         await fetch(`${API_URL}/label/${query2.labelId}`, {
@@ -82,10 +50,6 @@
             },
             body: JSON.stringify(res)
         })
-
-
-        
-
         console.log(query2, res);
     }
 
@@ -96,16 +60,18 @@
 
     <a href="/leaderboard">View leaderboard</a>
 </div>
-
 {#if query === undefined}
-    <p> Loading </p>
-{:else}
-    {#if query.task.type == "noQuery"}
-        <p>Welp no query found for you :/</p>
-        <button on:click={refresh}>Try refresh</button>
+    {#if err != undefined}
+        <p>An Error Occured: {err.toString()}</p>
+        <button on:click={() => {pullQueries(10)}}>Try refresh</button>
+    {:else if querying === true}
+        <p> Loading </p>
     {:else}
-        <svelte:component this={Raters[query.task.type]} on:submit={(data) => submit(query, data.detail)} task={query.task}/>
+        <p>Welp no query found for you :/</p>
+        <button on:click={() => {pullQueries(10)}}>Try refresh</button>
     {/if}
+{:else}
+    <svelte:component this={Raters[query.task.type]} on:submit={(data) => submit(query, data.detail)} task={query.task}/>
 {/if}
 <style>
     .header {
