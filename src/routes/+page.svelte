@@ -17,7 +17,7 @@
         querying = true;
         err = undefined;
         try {
-            let resp =  await fetch(`${API_URL}/label/tasks?size=${10}`, {
+            let resp =  await fetch(`${API_URL}/label/tasks?size=${10}&type=asdlaksjd`, {
                 method: "GET",
                 headers: {
                     Authorization: $API_TOKEN
